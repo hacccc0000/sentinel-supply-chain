@@ -22,13 +22,13 @@ az group create -n "$RG" -l "$LOCATION" -o none
 echo "→ PostgreSQL Flexible Server (Burstable B1ms)…"
 az postgres flexible-server create -g "$RG" -n "$PG" -l "$LOCATION" --tier Burstable --sku-name Standard_B1ms \
   --storage-size 32 --version 16 --admin-user "$PGUSER" --admin-password "$PGPASS" --public-access 0.0.0.0 --yes -o none
-az postgres flexible-server db create -g "$RG" -s "$PG" -d "$DB" -o none
+az postgres flexible-server db create -g "$RG" --server-name "$PG" --database-name "$DB" -o none
 echo "→ App Service plan (Linux B1) + Web App…"
 az appservice plan create -g "$RG" -n "plan-$APP" --is-linux --sku B1 -o none
-az webapp create -g "$RG" -p "plan-$APP" -n "$APP" --container-image-name "$IMAGE" -o none
+az webapp create -g "$RG" -p "plan-$APP" -n "$APP" -i "$IMAGE" -o none
 if [ -n "${GHCR_PAT:-}" ]; then
-  az webapp config container set -g "$RG" -n "$APP" --container-image-name "$IMAGE" \
-    --container-registry-url https://ghcr.io --container-registry-user "${GHCR_USER:?set GHCR_USER}" --container-registry-password "$GHCR_PAT" -o none
+  az webapp config container set -g "$RG" -n "$APP" -c "$IMAGE" \
+    --docker-registry-server-url https://ghcr.io --docker-registry-server-user "${GHCR_USER:?set GHCR_USER}" --docker-registry-server-password "$GHCR_PAT" -o none
 fi
 DBURL="postgresql://$PGUSER:$PGPASS@$PG.postgres.database.azure.com:5432/$DB?sslmode=require"
 az webapp config appsettings set -g "$RG" -n "$APP" -o none --settings \
