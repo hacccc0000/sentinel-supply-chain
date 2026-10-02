@@ -1,0 +1,6 @@
+window.__APP_CONFIG__ = {
+  apiUrl: "${API_URL}",
+  entraClientId: "${ENTRA_CLIENT_ID}",
+  entraAuthority: "${ENTRA_AUTHORITY}",
+  apiScope: "${API_SCOPE}"
+};

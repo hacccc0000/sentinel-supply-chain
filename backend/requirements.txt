@@ -1,0 +1,11 @@
+fastapi==0.119.0
+uvicorn[standard]==0.38.0
+sqlalchemy==2.0.44
+psycopg[binary]==3.2.12
+alembic==1.17.0
+pydantic-settings==2.11.0
+httpx==0.28.1
+azure-identity==1.25.0
+azure-keyvault-secrets==4.10.0
+cryptography==46.0.3
+pytest==8.4.2
