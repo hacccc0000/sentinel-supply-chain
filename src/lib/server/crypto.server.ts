@@ -74,13 +74,49 @@ export async function signingKey(): Promise<{ key: string; keyId: string }> {
   return { key, keyId: sha256(key).slice(0, 12) };
 }
 
-export async function signDocument(doc: unknown): Promise<{ signature: string; keyId: string; digest: string }> {
-  const { key, keyId } = await signingKey();
-  const body = canonical(doc);
-  return { signature: createHmac("sha256", key).update(body).digest("hex"), keyId, digest: sha256(body) };
+/* ───── Azure Key Vault signing (enabled when AZURE_KEYVAULT_URL + AZURE_KEYVAULT_KEY are set) ───── */
+const akvEnabled = () => !!(process.env.AZURE_KEYVAULT_URL && process.env.AZURE_KEYVAULT_KEY);
+let akvToken: { v: string; exp: number } | null = null;
+async function akvAccessToken(): Promise<string> {
+  if (akvToken && akvToken.exp > Date.now() + 60_000) return akvToken.v;
+  const ep = process.env.IDENTITY_ENDPOINT;
+  const hdr = process.env.IDENTITY_HEADER;
+  if (!ep || !hdr) throw new Error("Key Vault signing needs an Azure managed identity (IDENTITY_ENDPOINT not set)");
+  const clientId = process.env.AZURE_CLIENT_ID ? `&client_id=${encodeURIComponent(process.env.AZURE_CLIENT_ID)}` : "";
+  const res = await fetch(`${ep}?resource=${encodeURIComponent("https://vault.azure.net")}&api-version=2019-08-01${clientId}`, { headers: { "X-IDENTITY-HEADER": hdr } });
+  if (!res.ok) throw new Error(`Managed identity token request failed (HTTP ${res.status})`);
+  const j = (await res.json()) as { access_token: string; expires_on: string };
+  akvToken = { v: j.access_token, exp: Number(j.expires_on) * 1000 };
+  return akvToken.v;
+}
+async function akvCall(op: "sign" | "verify", body: Record<string, string>): Promise<any> {
+  const base = process.env.AZURE_KEYVAULT_URL!.replace(/\/$/, "");
+  const res = await fetch(`${base}/keys/${process.env.AZURE_KEYVAULT_KEY}/${op}?api-version=7.4`, { method: "POST", headers: { authorization: `Bearer ${await akvAccessToken()}`, "content-type": "application/json" }, body: JSON.stringify({ alg: "RS256", ...body }) });
+  if (!res.ok) throw new Error(`Key Vault ${op} failed (HTTP ${res.status})`);
+  return res.json();
+}
+const keyVaultId = () => `akv:${process.env.AZURE_KEYVAULT_URL!.replace(/^https:\/\//, "").split(".")[0]}/${process.env.AZURE_KEYVAULT_KEY}`;
+
+export function signerInfo(): { mode: "azure-key-vault" | "platform-hmac"; label: string } {
+  return akvEnabled() ? { mode: "azure-key-vault", label: keyVaultId() } : { mode: "platform-hmac", label: "platform HMAC key" };
 }
 
+export async function signDocument(doc: unknown): Promise<{ signature: string; keyId: string; digest: string }> {
+  const body = canonical(doc);
+  const digest = sha256(body);
+  if (akvEnabled()) {
+    const r = await akvCall("sign", { value: Buffer.from(digest, "hex").toString("base64url") });
+    return { signature: `akv-rs256:${r.value}`, keyId: keyVaultId(), digest };
+  }
+  const { key, keyId } = await signingKey();
+  return { signature: createHmac("sha256", key).update(body).digest("hex"), keyId, digest };
+}
 export async function verifyDocument(doc: unknown, signature: string): Promise<boolean> {
+  if (signature.startsWith("akv-rs256:")) {
+    if (!akvEnabled()) return false;
+    const r = await akvCall("verify", { digest: Buffer.from(sha256(canonical(doc)), "hex").toString("base64url"), value: signature.slice(10) });
+    return r.value === true;
+  }
   const { key } = await signingKey();
   const expected = createHmac("sha256", key).update(canonical(doc)).digest();
   const given = Buffer.from(signature, "hex");

@@ -1,0 +1,1 @@
+{ "name": "buildbouncer-worker", "private": true, "type": "module", "dependencies": { "semver": "^7.8.5", "tsx": "^4.19.0" } }

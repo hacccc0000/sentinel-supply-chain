@@ -38,7 +38,7 @@ export function LandingPage() {
               <Link to="/login"><Button variant="secondary" size="lg"><Play className="size-4" />Sign in</Button></Link>
             </div>
             <div className="mt-8 flex flex-col gap-2 text-xs text-dim sm:flex-row sm:gap-7">
-              {["Scripts are analysed, never executed", "Source code is not copied", "CI gate via REST API"].map((t) => (
+              {["Scripts are analysed, never executed", "Private workers keep source in your network", "CI gate via REST API"].map((t) => (
                 <span key={t} className="inline-flex items-center gap-1.5"><Check className="size-3 text-navy" />{t}</span>
               ))}
             </div>
@@ -100,14 +100,15 @@ export function LandingPage() {
               { ic: ShieldCheck, t: "Policy engine", b: "29 rules across packages, lifecycle scripts, vulnerabilities, egress and SBOM. Version history and publish.", to: "/policies" },
               { ic: PackageX, t: "Quarantine workflow", b: "Approve, reject or permanently block — with notes, bulk actions and an audit trail.", to: "/dashboard/quarantine" },
               { ic: FileSignature, t: "Signed SBOM & provenance", b: "CycloneDX 1.5 and in-toto statements, HMAC-SHA256 signed and verifiable in the app.", to: "/dashboard/sbom" },
+              { ic: Workflow, t: "Private workers", b: "Run the worker image in your own network; it scans locally and uploads only the result.", to: "/docs" },
               { ic: Workflow, t: "CI/CD gate", b: "POST /api/v1/scans with an API token; fail the pipeline on a blocked verdict.", to: "/docs" },
               { ic: ScrollText, t: "Compliance mapping", b: "Controls from SOC 2, ISO 27001, NIST SSDF, DORA and more mapped to rules; coverage computed live.", to: "/compliance" },
-              { ic: KeyRound, t: "Access control", b: "Admin, operator, reviewer and auditor roles; sign-in, sessions and an immutable audit log.", to: "/dashboard/identity" },
+              { ic: KeyRound, t: "Access control", b: "Admin, operator, reviewer and auditor roles, Microsoft Entra SSO and an audit log of every action.", to: "/dashboard/identity" },
             ].map((c) => (
               <div key={c.t} className="rounded-md border border-line bg-elev p-6"><c.ic className="mb-3.5 size-5 text-navy" /><h3 className="mb-2 text-base font-semibold">{c.t}</h3><p className="mb-3 text-sm text-muted">{c.b}</p><Link to={c.to} className="text-xs font-semibold text-navy hover:underline">Open →</Link></div>
             ))}
           </div>
-          <p className="mt-8 max-w-3xl text-sm text-dim">On the roadmap: a runtime sandbox agent that observes install scripts as they execute, Java/Maven support, KMS-backed signing keys, and BTP / Jira / Vault integrations.</p>
+          <p className="mt-8 max-w-3xl text-sm text-dim">On the roadmap: a runtime sandbox agent that observes install scripts as they execute, Helm packaging for workers, SLSA L3 attestation, Java/Maven support, and BTP / Jira / Vault integrations.</p>
         </div>
       </section>
 

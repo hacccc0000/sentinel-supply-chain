@@ -26,7 +26,7 @@ export function SbomPage() {
   };
   return (
     <>
-      <PageHeader eyebrow="Evidence" title="SBOM & provenance" subtitle={`CycloneDX 1.5 SBOMs and in-toto provenance, signed with HMAC-SHA256 (key ${data.tenant.signing_key_id}). Verify any document against the platform key.`} actions={ev && <Button variant="secondary" onClick={() => download("/api/v1/export/sboms.zip")}><Download className="size-4" />Download all (.zip)</Button>} />
+      <PageHeader eyebrow="Evidence" title="SBOM & provenance" subtitle={`CycloneDX 1.5 SBOMs and in-toto provenance, signed with key ${data.tenant.signing_key_id} (Azure Key Vault RS256 when configured, otherwise platform HMAC-SHA256). Verify any document here.`} actions={ev && <Button variant="secondary" onClick={() => download("/api/v1/export/sboms.zip")}><Download className="size-4" />Download all (.zip)</Button>} />
       <Card>
         {data.sboms.length === 0 ? <Empty title="No SBOMs yet" body="An SBOM is generated and signed for every completed build." /> : (
           <Table heads={["SBOM", "Project", "Build", "Components", "SAP", "Signature", "Created", ""]} min={980}>

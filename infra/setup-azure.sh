@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # BuildBouncer — one-shot Azure setup (run in Azure Cloud Shell, bash). Low-cost: B1 plan + Burstable B1ms Postgres.
 # Usage:  curl -fsSL <raw url> | bash     or paste this file.
-# Optional env before running:  APP=bb-demo-123  LOCATION=centralindia  ADMIN_EMAIL=you@x.com  ADMIN_PASSWORD='StrongPass123'
+# Optional env before running:  USE_KEYVAULT=false  USE_SSO=false  APP=bb-demo-123  LOCATION=centralindia  ADMIN_EMAIL=you@x.com  ADMIN_PASSWORD='StrongPass123'
 #   GHCR_USER / GHCR_PAT  (only if the GHCR package is private; a PAT with read:packages)
 set -euo pipefail
 RAND=$(openssl rand -hex 3)
@@ -39,6 +39,32 @@ az webapp config appsettings set -g "$RG" -n "$APP" -o none --settings \
 az webapp config set -g "$RG" -n "$APP" --always-on true --health-check-path /api/health --http20-enabled true -o none
 az webapp update -g "$RG" -n "$APP" --https-only true -o none
 az webapp log config -g "$RG" -n "$APP" --docker-container-logging filesystem -o none
+# ── Azure Key Vault signing (SBOM/provenance signed with an RSA key you own). Set USE_KEYVAULT=false to skip. ──
+if [ "${USE_KEYVAULT:-true}" = "true" ]; then
+  KV=${KV:-kv-bb-$RAND}
+  echo "→ Key Vault $KV…"
+  az keyvault create -g "$RG" -n "$KV" -l "$LOCATION" --enable-rbac-authorization true -o none
+  az webapp identity assign -g "$RG" -n "$APP" -o none
+  PRINCIPAL=$(az webapp identity show -g "$RG" -n "$APP" --query principalId -o tsv)
+  KVID=$(az keyvault show -g "$RG" -n "$KV" --query id -o tsv)
+  ME=$(az ad signed-in-user show --query id -o tsv 2>/dev/null || true)
+  [ -n "$ME" ] && az role assignment create --assignee "$ME" --role "Key Vault Crypto Officer" --scope "$KVID" -o none || true
+  sleep 20
+  az keyvault key create --vault-name "$KV" -n bb-signing --kty RSA --size 3072 --ops sign verify -o none
+  az role assignment create --assignee-object-id "$PRINCIPAL" --assignee-principal-type ServicePrincipal --role "Key Vault Crypto User" --scope "$KVID" -o none
+  az webapp config appsettings set -g "$RG" -n "$APP" -o none --settings AZURE_KEYVAULT_URL="https://$KV.vault.azure.net" AZURE_KEYVAULT_KEY=bb-signing
+fi
+
+# ── Microsoft Entra SSO ("Sign in with Microsoft"). Set USE_SSO=false to skip. ──
+if [ "${USE_SSO:-true}" = "true" ]; then
+  echo "→ Entra app registration…"
+  TENANT=$(az account show --query tenantId -o tsv)
+  APPID=$(az ad app create --display-name "BuildBouncer ($APP)" --sign-in-audience AzureADMyOrg --web-redirect-uris "https://$APP.azurewebsites.net/api/auth/sso/callback" --query appId -o tsv)
+  SECRET=$(az ad app credential reset --id "$APPID" --years 2 --query password -o tsv)
+  az webapp config appsettings set -g "$RG" -n "$APP" -o none --settings \
+    OIDC_ISSUER="https://login.microsoftonline.com/$TENANT/v2.0" OIDC_CLIENT_ID="$APPID" OIDC_CLIENT_SECRET="$SECRET" SSO_DEFAULT_ROLE=reviewer
+fi
+
 az webapp deployment list-publishing-profiles -g "$RG" -n "$APP" --xml > publish-profile.xml
 
 cat <<OUT

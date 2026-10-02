@@ -18,6 +18,7 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
   const [err, setErr] = useState("");
   const [f, setF] = useState({ name: "", email: "", password: "", code: "" });
   const first = session?.needsSetup;
+  const ssoErr = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("sso_error") : null;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,10 +76,13 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
             </Field>
             {mode === "signup" && session?.signupCodeRequired && !first && <Field label="Invitation code"><Input value={f.code} onChange={(e) => setF({ ...f, code: e.target.value })} required /></Field>}
           </div>
-          {err && <div role="alert" className="mt-4 rounded-sm border border-danger/30 bg-danger/8 px-3 py-2 text-sm text-danger">{err}</div>}
+          {(err || ssoErr) && <div role="alert" className="mt-4 rounded-sm border border-danger/30 bg-danger/8 px-3 py-2 text-sm text-danger">{err || ssoErr}</div>}
           <Button type="submit" size="lg" className="mt-5 w-full" disabled={busy}>
             {busy && <Loader2 className="size-4 animate-spin" />}{mode === "login" ? "Sign in" : "Create account"}
           </Button>
+          {mode === "login" && session?.sso && (
+            <a href="/api/auth/sso/start" className="mt-3 flex h-11 w-full items-center justify-center rounded-sm border border-line bg-elev text-sm font-semibold hover:bg-paper-2">{session.ssoLabel}</a>
+          )}
           <p className="mt-5 text-center text-sm text-muted">
             {mode === "login" ? (
               session?.signupOpen !== false ? <>New here? <Link to="/signup" className="font-semibold text-navy underline-offset-4 hover:underline">Create an account</Link></> : "Ask your administrator for access."

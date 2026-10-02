@@ -169,7 +169,7 @@ export function BuildDetailPage() {
             {sbom ? (
               <dl className="mb-4 space-y-1.5 text-xs">
                 <div className="flex justify-between gap-3"><dt className="text-dim">SBOM</dt><dd className="font-mono">{sbom.id} · {sbom.components} components</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-dim">Signature</dt><dd>{sbom.signed ? <Badge kind="success">HMAC-SHA256 signed</Badge> : <Badge kind="muted">unsigned (sample)</Badge>}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-dim">Signature</dt><dd>{sbom.signed ? <Badge kind="success">signed</Badge> : <Badge kind="muted">unsigned (sample)</Badge>}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-dim">Digest</dt><dd className="max-w-[60%] truncate font-mono" title={sbom.digest}>{sbom.digest}</dd></div>
                 <div className="flex justify-between gap-3"><dt className="text-dim">Key ID</dt><dd className="font-mono">{sbom.key_id ?? "—"}</dd></div>
               </dl>

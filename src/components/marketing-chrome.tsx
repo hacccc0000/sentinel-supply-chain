@@ -34,10 +34,10 @@ export function MarketingNav() {
               Sign in
             </Button>
           </Link>
-          <Link to="/signup">
+          <Link to="/demo">
             <Button size="sm">
               <Calendar className="size-3.5" />
-              Get started
+              Book a review
             </Button>
           </Link>
         </div>

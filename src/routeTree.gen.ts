@@ -34,11 +34,15 @@ import { Route as DashboardQuarantineRouteImport } from './routes/dashboard/quar
 import { Route as DashboardSbomRouteImport } from './routes/dashboard/sbom'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
 import { Route as ApiV1ScansRouteImport } from './routes/api/v1/scans'
+import { Route as ApiWorkerClaimRouteImport } from './routes/api/worker/claim'
 import { Route as ApiWorkerHeartbeatRouteImport } from './routes/api/worker/heartbeat'
+import { Route as ApiWorkerResultRouteImport } from './routes/api/worker/result'
 import { Route as DashboardBuildsIndexRouteImport } from './routes/dashboard/builds/index'
 import { Route as DashboardBuildsBuildIdRouteImport } from './routes/dashboard/builds/$buildId'
 import { Route as DashboardWorkersIndexRouteImport } from './routes/dashboard/workers/index'
 import { Route as DashboardWorkersInstallRouteImport } from './routes/dashboard/workers/install'
+import { Route as ApiAuthSsoCallbackRouteImport } from './routes/api/auth/sso/callback'
+import { Route as ApiAuthSsoStartRouteImport } from './routes/api/auth/sso/start'
 import { Route as ApiV1ComplianceCodeRouteImport } from './routes/api/v1/compliance/$code'
 import { Route as ApiV1ExportKindRouteImport } from './routes/api/v1/export/$kind'
 import { Route as ApiV1BuildsIdIndexRouteImport } from './routes/api/v1/builds/$id/index'
@@ -169,9 +173,19 @@ const ApiV1ScansRoute = ApiV1ScansRouteImport.update({
   path: '/api/v1/scans',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWorkerClaimRoute = ApiWorkerClaimRouteImport.update({
+  id: '/api/worker/claim',
+  path: '/api/worker/claim',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiWorkerHeartbeatRoute = ApiWorkerHeartbeatRouteImport.update({
   id: '/api/worker/heartbeat',
   path: '/api/worker/heartbeat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWorkerResultRoute = ApiWorkerResultRouteImport.update({
+  id: '/api/worker/result',
+  path: '/api/worker/result',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardBuildsIndexRoute = DashboardBuildsIndexRouteImport.update({
@@ -193,6 +207,16 @@ const DashboardWorkersInstallRoute = DashboardWorkersInstallRouteImport.update({
   id: '/workers/install',
   path: '/workers/install',
   getParentRoute: () => DashboardRoute,
+} as any)
+const ApiAuthSsoCallbackRoute = ApiAuthSsoCallbackRouteImport.update({
+  id: '/api/auth/sso/callback',
+  path: '/api/auth/sso/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSsoStartRoute = ApiAuthSsoStartRouteImport.update({
+  id: '/api/auth/sso/start',
+  path: '/api/auth/sso/start',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1ComplianceCodeRoute = ApiV1ComplianceCodeRouteImport.update({
   id: '/api/v1/compliance/$code',
@@ -241,11 +265,15 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/v1/scans': typeof ApiV1ScansRoute
+  '/api/worker/claim': typeof ApiWorkerClaimRoute
   '/api/worker/heartbeat': typeof ApiWorkerHeartbeatRoute
+  '/api/worker/result': typeof ApiWorkerResultRoute
   '/dashboard/builds/$buildId': typeof DashboardBuildsBuildIdRoute
   '/dashboard/workers/install': typeof DashboardWorkersInstallRoute
   '/dashboard/builds/': typeof DashboardBuildsIndexRoute
   '/dashboard/workers/': typeof DashboardWorkersIndexRoute
+  '/api/auth/sso/callback': typeof ApiAuthSsoCallbackRoute
+  '/api/auth/sso/start': typeof ApiAuthSsoStartRoute
   '/api/v1/compliance/$code': typeof ApiV1ComplianceCodeRoute
   '/api/v1/export/$kind': typeof ApiV1ExportKindRoute
   '/api/v1/builds/$id/$artifact': typeof ApiV1BuildsIdArtifactRoute
@@ -276,11 +304,15 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
   '/api/v1/scans': typeof ApiV1ScansRoute
+  '/api/worker/claim': typeof ApiWorkerClaimRoute
   '/api/worker/heartbeat': typeof ApiWorkerHeartbeatRoute
+  '/api/worker/result': typeof ApiWorkerResultRoute
   '/dashboard/builds/$buildId': typeof DashboardBuildsBuildIdRoute
   '/dashboard/workers/install': typeof DashboardWorkersInstallRoute
   '/dashboard/builds': typeof DashboardBuildsIndexRoute
   '/dashboard/workers': typeof DashboardWorkersIndexRoute
+  '/api/auth/sso/callback': typeof ApiAuthSsoCallbackRoute
+  '/api/auth/sso/start': typeof ApiAuthSsoStartRoute
   '/api/v1/compliance/$code': typeof ApiV1ComplianceCodeRoute
   '/api/v1/export/$kind': typeof ApiV1ExportKindRoute
   '/api/v1/builds/$id/$artifact': typeof ApiV1BuildsIdArtifactRoute
@@ -313,11 +345,15 @@ export interface FileRoutesById {
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/v1/scans': typeof ApiV1ScansRoute
+  '/api/worker/claim': typeof ApiWorkerClaimRoute
   '/api/worker/heartbeat': typeof ApiWorkerHeartbeatRoute
+  '/api/worker/result': typeof ApiWorkerResultRoute
   '/dashboard/builds/$buildId': typeof DashboardBuildsBuildIdRoute
   '/dashboard/workers/install': typeof DashboardWorkersInstallRoute
   '/dashboard/builds/': typeof DashboardBuildsIndexRoute
   '/dashboard/workers/': typeof DashboardWorkersIndexRoute
+  '/api/auth/sso/callback': typeof ApiAuthSsoCallbackRoute
+  '/api/auth/sso/start': typeof ApiAuthSsoStartRoute
   '/api/v1/compliance/$code': typeof ApiV1ComplianceCodeRoute
   '/api/v1/export/$kind': typeof ApiV1ExportKindRoute
   '/api/v1/builds/$id/$artifact': typeof ApiV1BuildsIdArtifactRoute
@@ -351,11 +387,15 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/'
     | '/api/v1/scans'
+    | '/api/worker/claim'
     | '/api/worker/heartbeat'
+    | '/api/worker/result'
     | '/dashboard/builds/$buildId'
     | '/dashboard/workers/install'
     | '/dashboard/builds/'
     | '/dashboard/workers/'
+    | '/api/auth/sso/callback'
+    | '/api/auth/sso/start'
     | '/api/v1/compliance/$code'
     | '/api/v1/export/$kind'
     | '/api/v1/builds/$id/$artifact'
@@ -386,11 +426,15 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard'
     | '/api/v1/scans'
+    | '/api/worker/claim'
     | '/api/worker/heartbeat'
+    | '/api/worker/result'
     | '/dashboard/builds/$buildId'
     | '/dashboard/workers/install'
     | '/dashboard/builds'
     | '/dashboard/workers'
+    | '/api/auth/sso/callback'
+    | '/api/auth/sso/start'
     | '/api/v1/compliance/$code'
     | '/api/v1/export/$kind'
     | '/api/v1/builds/$id/$artifact'
@@ -422,11 +466,15 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/'
     | '/api/v1/scans'
+    | '/api/worker/claim'
     | '/api/worker/heartbeat'
+    | '/api/worker/result'
     | '/dashboard/builds/$buildId'
     | '/dashboard/workers/install'
     | '/dashboard/builds/'
     | '/dashboard/workers/'
+    | '/api/auth/sso/callback'
+    | '/api/auth/sso/start'
     | '/api/v1/compliance/$code'
     | '/api/v1/export/$kind'
     | '/api/v1/builds/$id/$artifact'
@@ -447,7 +495,11 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   ApiHealthRoute: typeof ApiHealthRoute
   ApiV1ScansRoute: typeof ApiV1ScansRoute
+  ApiWorkerClaimRoute: typeof ApiWorkerClaimRoute
   ApiWorkerHeartbeatRoute: typeof ApiWorkerHeartbeatRoute
+  ApiWorkerResultRoute: typeof ApiWorkerResultRoute
+  ApiAuthSsoCallbackRoute: typeof ApiAuthSsoCallbackRoute
+  ApiAuthSsoStartRoute: typeof ApiAuthSsoStartRoute
   ApiV1ComplianceCodeRoute: typeof ApiV1ComplianceCodeRoute
   ApiV1ExportKindRoute: typeof ApiV1ExportKindRoute
   ApiV1BuildsIdArtifactRoute: typeof ApiV1BuildsIdArtifactRoute
@@ -631,11 +683,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1ScansRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/worker/claim': {
+      id: '/api/worker/claim'
+      path: '/api/worker/claim'
+      fullPath: '/api/worker/claim'
+      preLoaderRoute: typeof ApiWorkerClaimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/worker/heartbeat': {
       id: '/api/worker/heartbeat'
       path: '/api/worker/heartbeat'
       fullPath: '/api/worker/heartbeat'
       preLoaderRoute: typeof ApiWorkerHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/worker/result': {
+      id: '/api/worker/result'
+      path: '/api/worker/result'
+      fullPath: '/api/worker/result'
+      preLoaderRoute: typeof ApiWorkerResultRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/builds/': {
@@ -665,6 +731,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/workers/install'
       preLoaderRoute: typeof DashboardWorkersInstallRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/api/auth/sso/callback': {
+      id: '/api/auth/sso/callback'
+      path: '/api/auth/sso/callback'
+      fullPath: '/api/auth/sso/callback'
+      preLoaderRoute: typeof ApiAuthSsoCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/sso/start': {
+      id: '/api/auth/sso/start'
+      path: '/api/auth/sso/start'
+      fullPath: '/api/auth/sso/start'
+      preLoaderRoute: typeof ApiAuthSsoStartRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/v1/compliance/$code': {
       id: '/api/v1/compliance/$code'
@@ -753,7 +833,11 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   ApiHealthRoute: ApiHealthRoute,
   ApiV1ScansRoute: ApiV1ScansRoute,
+  ApiWorkerClaimRoute: ApiWorkerClaimRoute,
   ApiWorkerHeartbeatRoute: ApiWorkerHeartbeatRoute,
+  ApiWorkerResultRoute: ApiWorkerResultRoute,
+  ApiAuthSsoCallbackRoute: ApiAuthSsoCallbackRoute,
+  ApiAuthSsoStartRoute: ApiAuthSsoStartRoute,
   ApiV1ComplianceCodeRoute: ApiV1ComplianceCodeRoute,
   ApiV1ExportKindRoute: ApiV1ExportKindRoute,
   ApiV1BuildsIdArtifactRoute: ApiV1BuildsIdArtifactRoute,

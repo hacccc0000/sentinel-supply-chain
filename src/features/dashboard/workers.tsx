@@ -22,7 +22,7 @@ export function WorkersPage() {
   const filtered = filter === "all" ? workers : workers.filter((w) => w.status === filter);
   return (
     <>
-      <PageHeader eyebrow="Pipeline" title="Workers" subtitle="Scan runtimes. The built-in control-plane scanner is always available; register private workers to report heartbeat from your own infrastructure." actions={manage && <Link to="/dashboard/workers/install"><Button><Plus className="size-4" />Register worker</Button></Link>} />
+      <PageHeader eyebrow="Pipeline" title="Workers" subtitle="Scan runtimes. The built-in control-plane scanner is always available; register private workers to scan inside your own network." actions={manage && <Link to="/dashboard/workers/install"><Button><Plus className="size-4" />Register worker</Button></Link>} />
       <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Kpi label="Online" value={`${workers.filter((w) => w.status === "online").length} / ${workers.length}`} icon={<CircleCheck className="size-3.5" />} tone="success" />
         <Kpi label="Degraded" value={workers.filter((w) => w.status === "degraded").length} icon={<AlertTriangle className="size-3.5" />} tone="warn" />
@@ -69,17 +69,17 @@ export function InstallWizardPage() {
     const r = await run(() => registerWorker({ data: f }), "Worker registered");
     if (r) setToken(r.token);
   };
-  const hb = `curl -fsS -X POST ${origin}/api/worker/heartbeat \\\n  -H "Authorization: Bearer ${token ?? "<WORKER_TOKEN>"}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"version":"1.0.0","queue":0}'`;
+  const run_ = `docker run -d --restart unless-stopped --name buildbouncer-worker \\\n  -e BB_URL=${origin} \\\n  -e BB_WORKER_TOKEN=${token ?? "<WORKER_TOKEN>"} \\\n  -e GITHUB_TOKEN=<optional-token-for-private-repos> \\\n  ghcr.io/hacccc0000/sentinel-supply-chain-worker:latest`;
   return (
     <>
-      <PageHeader eyebrow="Workers" title="Register a worker" subtitle="Registers a private runner and issues a one-time token. The worker reports heartbeat to the control plane; its status is derived from heartbeat age." />
+      <PageHeader eyebrow="Workers" title="Register a worker" subtitle="Registers a private worker and issues a one-time token. The agent polls for builds; its status is derived from heartbeat age." />
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
           <div className="grid gap-4">
             <Field label="Worker name" hint="lowercase letters, numbers, hyphens"><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value.toLowerCase() })} placeholder="sap-prod-eu-01" disabled={!!token} /></Field>
             <Field label="Environment"><Input value={f.env} onChange={(e) => setF({ ...f, env: e.target.value })} disabled={!!token} /></Field>
             <Field label="Region"><Input value={f.region} onChange={(e) => setF({ ...f, region: e.target.value })} disabled={!!token} /></Field>
-            <Field label="Isolation"><Select className="w-full" value={f.isolation} onChange={(e) => setF({ ...f, isolation: e.target.value })} disabled={!!token}><option>container</option><option>microvm</option><option>vm</option></Select></Field>
+            <Field label="Isolation"><Select className="w-full" value={f.isolation} onChange={(e) => setF({ ...f, isolation: e.target.value })} disabled={!!token}><option>container</option><option>vm</option><option>host</option></Select></Field>
             {!token && <Button disabled={f.name.length < 3} onClick={submit}>Register worker & issue token</Button>}
           </div>
         </Card>
@@ -89,11 +89,12 @@ export function InstallWizardPage() {
             <>
               <p className="mb-2 text-xs text-warn">Copy this token now — it is shown only once.</p>
               <CopyBox text={token} label="Token" />
-              <p className="mt-4 mb-2 text-xs text-muted">Send a heartbeat every 15 seconds (cron, sidecar or systemd timer):</p>
-              <CopyBox text={hb} label="Command" />
+              <p className="mt-4 mb-2 text-xs text-muted">Run the worker agent inside your network (Docker host, VM or any container platform). It polls the control plane, fetches the repository and package metadata locally, and uploads only the scan result:</p>
+              <CopyBox text={run_} label="Command" />
+              <p className="mt-3 text-xs text-dim">Then edit a project and choose this worker under “Run scans on”.</p>
               <Link to="/dashboard/workers" className="mt-4 inline-block text-xs font-semibold text-navy hover:underline">Back to workers →</Link>
             </>
-          ) : <p className="text-sm text-muted">After registering, you will receive a one-time <code className="font-mono">bbw_</code> token and the heartbeat command. Heartbeat is the only thing a worker reports today; scans themselves run on the built-in scanner.</p>}
+          ) : <p className="text-sm text-muted">After registering, you will receive a one-time <code className="font-mono">bbw_</code> token and the heartbeat command. Assign projects to the worker and its agent performs their scans inside your network.</p>}
         </Card>
       </div>
     </>

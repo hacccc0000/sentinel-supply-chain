@@ -34,6 +34,8 @@ export const getMe = createServerFn({ method: "GET" }).handler(async () => {
     signupOpen,
     needsSetup: n === 0,
     signupCodeRequired: !!process.env.SIGNUP_CODE,
+    sso: !!(process.env.OIDC_ISSUER && process.env.OIDC_CLIENT_ID && process.env.OIDC_CLIENT_SECRET),
+    ssoLabel: process.env.OIDC_LABEL || "Sign in with Microsoft",
   };
 });
 
@@ -95,7 +97,7 @@ export const bootstrap = createServerFn({ method: "GET" }).handler(async (): Pro
         version, case when sample then heartbeat_s else coalesce(extract(epoch from now() - last_heartbeat_at)::int, 0) end as heartbeat_s,
         case when builtin then (select count(*)::int from projects) else projects end as projects, isolation, builds, queue, sample, builtin
         from workers order by builtin desc, name`,
-    sql`select id, name, type, repo, branch, policy, owner, last_build, (manifest is not null and manifest <> '') as has_manifest, sample from projects order by name`,
+    sql`select id, name, type, repo, branch, policy, owner, last_build, (manifest is not null and manifest <> '') as has_manifest, worker_id, sample from projects order by name`,
     sql.query(`select id, status, project_id, project, commit, branch, author, worker, duration, findings, ${iso("created_at")} as created_at, ${iso("finished_at")} as finished_at, trigger, requested_by, override_by, analysis_mode, policy_mode, error, sample from builds order by created_at desc limit 200`),
     sql.query(`select id, name, version, project, project_id, build_id, ${iso("created_at")} as created_at, lifecycle, maintainer, scanner, risk, age, reason, decision, decided_by, ${iso("decided_at")} as decided_at, note, risk_factors, scripts, analysis, weekly_downloads, sample from quarantine_items order by (decision is null) desc, risk desc, id desc limit 300`),
     sql`select id, category, label, description, enabled, sort_order from policy_rules order by category, sort_order`,
@@ -136,7 +138,7 @@ export const bootstrap = createServerFn({ method: "GET" }).handler(async (): Pro
   const last = (versions as Array<{ rules: Array<{ id: string; enabled: boolean }>; mode: string; version: string }>)[0];
   const snap = new Map((last?.rules ?? []).map((r) => [r.id, r.enabled]));
   const policyDirty = !last || last.mode !== mode || (rules as Array<{ id: string; enabled: boolean }>).some((r) => snap.get(r.id) !== r.enabled);
-  const sk = await s.crypto.signingKey();
+  const sk = { keyId: s.crypto.signerInfo().mode === "azure-key-vault" ? s.crypto.signerInfo().label : (await s.crypto.signingKey()).keyId };
   const done = c.ok_24h! + c.blocked_24h!;
   return {
     me: { ...me, permissions: s.auth.ROLE_PERMISSIONS[me.role] as string[] },
@@ -189,6 +191,7 @@ const projectInput = z.object({
   branch: z.string().min(1).max(100).default("main"),
   manifest: z.string().max(2_000_000).optional(),
   lockfile: z.string().max(12_000_000).optional(),
+  worker_id: z.string().max(40).nullable().optional(),
 });
 
 export const addProject = createServerFn({ method: "POST" }).validator(projectInput).handler(async ({ data }) => {
@@ -205,7 +208,7 @@ export const addProject = createServerFn({ method: "POST" }).validator(projectIn
     }
   }
   const pol = (await sql<{ version: string }>`select version from policy_settings where id = 'default'`)[0];
-  await sql`insert into projects (id, name, type, repo, branch, policy, owner, last_build, manifest, lockfile, created_by) values (${id}, ${data.name}, ${data.type}, ${data.repo.trim()}, ${data.branch}, ${`Strict Prod SAP CAP v${pol?.version ?? ""}`}, ${u.name}, null, ${data.manifest?.trim() || null}, ${data.lockfile?.trim() || null}, ${u.email})`;
+  await sql`insert into projects (id, name, type, repo, branch, policy, owner, last_build, manifest, lockfile, created_by, worker_id) values (${id}, ${data.name}, ${data.type}, ${data.repo.trim()}, ${data.branch}, ${`Strict Prod SAP CAP v${pol?.version ?? ""}`}, ${u.name}, null, ${data.manifest?.trim() || null}, ${data.lockfile?.trim() || null}, ${u.email}, ${data.worker_id || null})`;
   await s.audit(sql, u, "project.register", data.name, data.repo);
   return { ok: true as const, id };
 });
@@ -214,7 +217,7 @@ export const updateProject = createServerFn({ method: "POST" }).validator(projec
   const s = await srv();
   const u = await s.auth.requireUser("projects.manage");
   const sql = await getSql();
-  await sql`update projects set name = ${data.name}, type = ${data.type}, repo = ${data.repo.trim()}, branch = ${data.branch}, manifest = ${data.manifest?.trim() || null}, lockfile = ${data.lockfile?.trim() || null} where id = ${data.id}`;
+  await sql`update projects set name = ${data.name}, type = ${data.type}, repo = ${data.repo.trim()}, branch = ${data.branch}, manifest = ${data.manifest?.trim() || null}, lockfile = ${data.lockfile?.trim() || null}, worker_id = ${data.worker_id || null} where id = ${data.id}`;
   await s.audit(sql, u, "project.update", data.name, data.repo);
   return { ok: true as const };
 });
@@ -402,7 +405,7 @@ export const verifySbom = createServerFn({ method: "POST" }).validator(z.object(
   const d = (await sql<{ doc: unknown }>`select doc from sbom_docs where id = ${data.id}`)[0];
   if (!r?.signature || !d) return { ok: false as const, reason: "This record has no stored document or signature (sample data)." };
   const valid = await s.crypto.verifyDocument(d.doc, r.signature);
-  return { ok: true as const, valid, keyId: (await s.crypto.signingKey()).keyId };
+  return { ok: true as const, valid, keyId: s.crypto.signerInfo().mode === "azure-key-vault" ? s.crypto.signerInfo().label : (await s.crypto.signingKey()).keyId };
 });
 
 /* ───────────── workers ───────────── */
@@ -567,3 +570,21 @@ export const markNotificationsRead = createServerFn({ method: "POST" }).handler(
   await sql`update notifications set read = true where not read`;
   return { ok: true as const };
 });
+
+
+/* ───────────── demo requests (public) ───────────── */
+const demoHits = new Map<string, number>();
+export const requestDemo = createServerFn({ method: "POST" })
+  .validator(z.object({ company: z.string().min(2).max(120), contact: z.string().email().max(200), landscape: z.string().min(2).max(80), note: z.string().max(1000).optional() }))
+  .handler(async ({ data }) => {
+    const s = await srv();
+    const ip = s.auth.clientIp() || "unknown";
+    const last = demoHits.get(ip) ?? 0;
+    if (Date.now() - last < 30_000) throw new Error("Please wait a moment before submitting again");
+    demoHits.set(ip, Date.now());
+    const sql = await getSql();
+    await sql`insert into demo_requests (company, contact, landscape, note) values (${data.company.trim()}, ${data.contact.trim()}, ${data.landscape}, ${data.note?.trim() ?? ""})`;
+    await s.audit(sql, "website", "demo.request", data.company.trim(), `${data.contact} · ${data.landscape}`);
+    await s.notify.notifyTeam(sql, { title: `Demo request — ${data.company.trim()}`, body: `${data.contact} · ${data.landscape}${data.note ? ` · ${data.note.slice(0, 200)}` : ""}`, link: "/dashboard/audit", severity: "info" }).catch(() => undefined);
+    return { ok: true as const };
+  });

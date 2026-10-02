@@ -16,7 +16,8 @@ const TYPES = ["SAP CAP (Node.js)", "Node.js service", "SAP Fiori / UI5", "Node.
 
 function ProjectForm({ edit, onClose }: { edit?: ProjectRow; onClose: () => void }) {
   const run = useRun();
-  const [f, setF] = useState({ name: edit?.name ?? "", type: edit?.type ?? TYPES[0]!, repo: edit?.repo ?? "", branch: edit?.branch ?? "main", manifest: "", lockfile: "" });
+  const [f, setF] = useState({ name: edit?.name ?? "", type: edit?.type ?? TYPES[0]!, repo: edit?.repo ?? "", branch: edit?.branch ?? "main", manifest: "", lockfile: "", worker_id: edit?.worker_id ?? "" });
+  const { data: tenant } = useTenant();
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState(!edit);
   if (edit && !loaded) {
@@ -25,7 +26,7 @@ function ProjectForm({ edit, onClose }: { edit?: ProjectRow; onClose: () => void
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
   const submit = async () => {
     setBusy(true);
-    const r = await run(() => (edit ? updateProject({ data: { ...f, id: edit.id } }) : addProject({ data: f })), edit ? "Project updated" : "Project registered");
+    const r = await run(() => (edit ? updateProject({ data: { ...f, worker_id: f.worker_id || null, id: edit.id } }) : addProject({ data: { ...f, worker_id: f.worker_id || null } })), edit ? "Project updated" : "Project registered");
     setBusy(false);
     if (r) onClose();
   };
@@ -36,6 +37,7 @@ function ProjectForm({ edit, onClose }: { edit?: ProjectRow; onClose: () => void
         <Field label="Type"><Select className="w-full" value={f.type} onChange={set("type")}>{TYPES.map((t) => <option key={t}>{t}</option>)}</Select></Field>
         <Field label="Repository" hint="owner/repo or full GitHub URL. Private repos need a GitHub token under Integrations."><Input value={f.repo} onChange={set("repo")} placeholder="my-org/payments-service" /></Field>
         <Field label="Branch"><Input value={f.branch} onChange={set("branch")} /></Field>
+        <Field label="Run scans on" hint="Private workers fetch and scan inside your own network."><Select className="w-full" value={f.worker_id} onChange={set("worker_id")}><option value="">Built-in scanner</option>{(tenant?.workers ?? []).filter((w) => !w.builtin && !w.sample).map((w) => <option key={w.id} value={w.id}>{w.name} ({w.status})</option>)}</Select></Field>
       </div>
       <div className="mt-4 grid gap-4">
         <Field label="package.json (optional)" hint="Paste to scan without repository access. Leave empty to fetch from the repository."><Textarea rows={6} value={f.manifest} onChange={set("manifest")} placeholder='{ "name": "app", "dependencies": { … } }' /></Field>

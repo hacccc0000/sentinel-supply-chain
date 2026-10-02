@@ -1,4 +1,9 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { requestDemo } from "@/lib/server/api";
+import { errMsg } from "@/lib/utils";
 import { MarketingFooter, MarketingNav } from "@/components/marketing-chrome";
 import { Button } from "@/components/ui/button";
 import { SAP_COVERAGE } from "@/lib/catalog";
@@ -33,7 +38,7 @@ export function PoliciesPage() {
           ["Egress", "Hosts referenced by install scripts are checked against allow and deny lists (metadata IPs, .onion, paste sites and more)."],
           ["Vulnerabilities", "OSV advisories with computed CVSS: critical and high block in block mode; others warn."],
           ["Secrets", "Secret-shaped values are redacted from logs and evidence (SEC-03)."],
-          ["SBOM", "CycloneDX 1.5 SBOM + in-toto provenance on every build, HMAC-signed."],
+          ["SBOM", "CycloneDX 1.5 SBOM + in-toto provenance on every build, signed with Azure Key Vault (RS256) or the platform HMAC key."],
         ].map(([t, b]) => (
           <div key={t} className="rounded-md border border-line bg-elev p-6"><h2 className="mb-2 font-semibold">{t}</h2><p className="text-sm text-muted">{b}</p></div>
         ))}
@@ -97,6 +102,7 @@ export function DocsPage() {
           ["2. Register a project", "Point at a GitHub repo (add a token under Integrations for private repos) or paste package.json / package-lock.json."],
           ["3. Run a build", "Run a protected build from the dashboard and review the timeline, findings and components."],
           ["4. Gate CI", "Create an API token, then POST /api/v1/scans from GitHub Actions, GitLab, Jenkins or Azure Pipelines. A blocked verdict fails the step."],
+          ["4b. Private workers (optional)", "Register a worker, run the worker Docker image in your network, and assign projects to it. Source is fetched and scanned locally."],
           ["5. Review quarantine", "Approve, reject or permanently block held packages; decisions are audit-logged."],
           ["6. Export evidence", "Download the signed SBOM, provenance and an evidence bundle per build, and compliance reports per framework."],
         ].map(([t, b]) => (
@@ -128,10 +134,31 @@ export function CustomersPage() {
 }
 
 export function DemoPage() {
+  const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [f, setF] = useState({ company: "", contact: "", landscape: "SAP CAP on BTP", note: "" });
   return (
-    <Shell kicker="Get started" title="Create a workspace and scan a real project.">
-      <p className="mb-6 max-w-lg text-sm text-muted">Sign up, paste a package.json or point at a repository, and run your first protected build.</p>
-      <div className="flex gap-2"><Link to="/signup"><Button>Create your workspace</Button></Link><Link to="/login"><Button variant="secondary">Sign in</Button></Link></div>
+    <Shell kicker="Book a review" title="Tell us about your SAP landscape.">
+      {sent ? (
+        <div className="max-w-lg rounded-md border border-success/30 bg-success/8 p-6">
+          <h2 className="mb-2 font-semibold">Request received</h2>
+          <p className="text-sm text-muted">Your request is stored and our team has been notified. You can also create a workspace now and scan a project yourself.</p>
+          <div className="mt-4 flex gap-2"><Link to="/signup"><Button>Create your workspace</Button></Link></div>
+        </div>
+      ) : (
+        <form className="max-w-lg space-y-4" onSubmit={async (e) => { e.preventDefault(); setBusy(true); try { await requestDemo({ data: { ...f, note: f.note || undefined } }); setSent(true); } catch (err) { toast.error(errMsg(err)); } finally { setBusy(false); } }}>
+          <label className="block text-sm font-semibold">Company<Input className="mt-1.5" value={f.company} onChange={(e) => setF({ ...f, company: e.target.value })} required minLength={2} /></label>
+          <label className="block text-sm font-semibold">Work email<Input type="email" className="mt-1.5" value={f.contact} onChange={(e) => setF({ ...f, contact: e.target.value })} required /></label>
+          <label className="block text-sm font-semibold">SAP landscape
+            <select value={f.landscape} onChange={(e) => setF({ ...f, landscape: e.target.value })} className="mt-1.5 h-10 w-full rounded-sm border border-line bg-elev px-3 text-sm">
+              {["SAP CAP on BTP", "Fiori / UI5", "HANA Cloud apps", "Mixed BTP + on-prem", "Other"].map((o) => <option key={o}>{o}</option>)}
+            </select>
+          </label>
+          <label className="block text-sm font-semibold">Anything we should know? (optional)<textarea className="mt-1.5 w-full rounded-sm border border-line bg-elev px-3 py-2 text-sm" rows={3} value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></label>
+          <p className="text-xs text-dim">We store your company, email and landscape to follow up on this request.</p>
+          <Button type="submit" disabled={busy}>Request a review</Button>
+        </form>
+      )}
     </Shell>
   );
 }

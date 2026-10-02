@@ -151,3 +151,15 @@ export async function bootstrapAdmin(): Promise<void> {
     console.error("[auth] ADMIN bootstrap failed:", (e as Error).message);
   }
 }
+
+
+/** Create a session without request-scoped helpers (used by SSO callback); returns the Set-Cookie value. */
+export async function issueSessionCookie(userId: string, req: Request): Promise<string> {
+  const sql = await getSql();
+  const token = randomToken(32);
+  const expires = new Date(Date.now() + TTL_MS);
+  const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0]!.trim();
+  await sql`insert into sessions (id, user_id, expires_at, ip, user_agent) values (${sha256(token)}, ${userId}, ${expires.toISOString()}, ${ip}, ${(req.headers.get("user-agent") ?? "").slice(0, 200)})`;
+  const proto = (req.headers.get("x-forwarded-proto") ?? new URL(req.url).protocol.replace(":", "")).split(",")[0]!.trim();
+  return `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${TTL_MS / 1000}${proto === "https" ? "; Secure" : ""}`;
+}

@@ -3,7 +3,8 @@
 Supply-chain security for SAP (CAP / BTP / Fiori) Node.js builds. Scans dependency graphs against policy **before** anything is installed, quarantines suspicious packages for human review, and produces signed SBOM / provenance / evidence bundles.
 
 **What runs today:** real auth + RBAC, GitHub/pasted-manifest ingestion, lockfile or registry graph resolution, OSV vulnerability lookup, install-script static analysis (never executed), policy engine (audit/warn/block), quarantine workflow, signed CycloneDX SBOM + in-toto provenance (HMAC-SHA256), evidence zip, compliance mapping, audit log, CI scan API, Slack/Teams/webhook alerts.
-**Roadmap (shown as such in UI):** runtime syscall sandbox agent, Java/Maven, KMS signing, BTP/Jira/Vault integrations.
+**Also included:** private worker agent (`Dockerfile.worker`, scans inside your network), Azure Key Vault RS256 signing, Microsoft Entra SSO, demo-request capture.
+**Roadmap (shown as such in UI):** runtime syscall sandbox agent, Java/Maven, BTP/Jira/Vault integrations.
 
 ## Deploy (GitHub → GHCR → Azure App Service)
 1. Run `infra/setup-azure.sh` in Azure Cloud Shell (creates RG, Postgres B1ms, App Service B1, app settings).
