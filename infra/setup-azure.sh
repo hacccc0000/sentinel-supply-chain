@@ -22,7 +22,7 @@ az group create -n "$RG" -l "$LOCATION" -o none
 echo "→ PostgreSQL Flexible Server (Burstable B1ms)…"
 az postgres flexible-server create -g "$RG" -n "$PG" -l "$LOCATION" --tier Burstable --sku-name Standard_B1ms \
   --storage-size 32 --version 16 --admin-user "$PGUSER" --admin-password "$PGPASS" --public-access 0.0.0.0 --yes -o none
-az postgres flexible-server db create -g "$RG" --server-name "$PG" --database-name "$DB" -o none
+az postgres flexible-server db create -g "$RG" --server-name "$PG" -n "$DB" -o none
 echo "→ App Service plan (Linux B1) + Web App…"
 az appservice plan create -g "$RG" -n "plan-$APP" --is-linux --sku B1 -o none
 az webapp create -g "$RG" -p "plan-$APP" -n "$APP" -i "$IMAGE" -o none
