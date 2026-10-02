@@ -60,6 +60,23 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
               );
             })}
           </div>
+          <div className="mt-8 grid grid-cols-3 gap-px overflow-hidden rounded-md border border-white/15 bg-white/10 text-center">
+            {[["22", "enforced rules"], ["6", "checks per build"], ["4", "roles + audit log"]].map(([n, l]) => (
+              <div key={l} className="bg-[#06182c] px-3 py-4"><div className="font-mono text-2xl font-light">{n}</div><div className="mt-1 text-2xs text-white/55">{l}</div></div>
+            ))}
+          </div>
+          <div className="mt-6 rounded-md border border-white/15 bg-black/25 p-4 font-mono text-xs leading-6 text-white/70">
+            <div className="mb-1 text-2xs tracking-wider text-white/35 uppercase">Illustrative replay</div>
+            <div><span className="text-white/40">$</span> scan payments-service</div>
+            <div>resolved <span className="text-white">412</span> components</div>
+            <div className="text-[#ffb86b]">held  sap-helper-utils@2.1.0  new maintainer</div>
+            <div className="text-[#ff6b73]">verdict: BLOCKED · evidence signed</div>
+          </div>
+          <ol className="mt-6 space-y-2 text-sm text-white/65">
+            <li><span className="mr-2 font-mono text-white/40">01</span>Register a project or paste a package.json</li>
+            <li><span className="mr-2 font-mono text-white/40">02</span>Run a protected build and review the verdict</li>
+            <li><span className="mr-2 font-mono text-white/40">03</span>Gate CI and export signed evidence</li>
+          </ol>
         </div>
         <div className="relative text-xs text-white/45">© BuildBouncer · Evidence for your compliance programmes — not a certification.</div>
       </div>
@@ -90,6 +107,17 @@ export function AuthPage({ mode }: { mode: "login" | "signup" }) {
               <>Already have an account? <Link to="/login" className="font-semibold text-navy underline-offset-4 hover:underline">Sign in</Link></>
             )}
           </p>
+          <ul className="mt-8 space-y-2 border-t border-line pt-6 text-xs text-muted">
+            <li className="flex gap-2"><Lock className="mt-0.5 size-3.5 shrink-0 text-navy" />Passwords are hashed with scrypt; sessions use HTTP-only cookies.</li>
+            <li className="flex gap-2"><ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-navy" />Four roles — admin, operator, reviewer, auditor — and every action is audit-logged.</li>
+            <li className="flex gap-2"><FileSignature className="mt-0.5 size-3.5 shrink-0 text-navy" />Your data stays in the Azure tenant this workspace is deployed to.</li>
+          </ul>
+          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-dim">
+            <Link to="/" className="hover:text-ink">← Back to site</Link>
+            <Link to="/docs" className="hover:text-ink">Docs</Link>
+            <Link to="/demo" className="hover:text-ink">Contact us</Link>
+            <Link to="/architecture" className="hover:text-ink">Architecture</Link>
+          </div>
         </form>
       </div>
     </div>
