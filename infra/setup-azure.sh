@@ -36,7 +36,8 @@ az webapp config appsettings set -g "$RG" -n "$APP" -o none --settings \
   DATABASE_URL="$DBURL" SESSION_SECRET="$SESSION_SECRET" SIGNING_KEY="$SIGNING_KEY" \
   ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" ALLOW_SIGNUP=true SIGNUP_ROLE=operator \
   PUBLIC_URL="https://$APP.azurewebsites.net"
-az webapp config set -g "$RG" -n "$APP" --always-on true --health-check-path /api/health --http20-enabled true -o none
+az webapp config set -g "$RG" -n "$APP" --always-on true --http20-enabled true -o none
+az webapp config set -g "$RG" -n "$APP" --generic-configurations '{"healthCheckPath":"/api/health"}' -o none || echo "(health check path not set; set it in Portal → Health check)"
 az webapp update -g "$RG" -n "$APP" --https-only true -o none
 az webapp log config -g "$RG" -n "$APP" --docker-container-logging filesystem -o none
 # ── Azure Key Vault signing (SBOM/provenance signed with an RSA key you own). Set USE_KEYVAULT=false to skip. ──
