@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "checkJs": false,
+    "noEmit": true,
+    "types": [
+      "vite/client",
+      "node"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/lib/auth",
+    "src/lib/app-data",
+    "src/lib/multiplayer",
+    "src/lib/og",
+    "src/lib/preview-host-bridge.ts",
+    "src/lib/preview-embedder-origin.ts",
+    "src/lib/env.server.ts",
+    "src/components/preview-host-bridge.tsx",
+    "**/*.test.ts",
+    "**/*.test.mjs"
+  ]
+}

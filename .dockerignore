@@ -1,8 +1,8 @@
+node_modules
+.output
 .git
-.env*
-**/__pycache__
-**/.pytest_cache
-**/node_modules
-**/dist
-**/.venv
-**/*.pyc
+.tanstack
+screenshots
+*.md
+infra
+.github
