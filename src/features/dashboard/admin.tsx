@@ -74,8 +74,8 @@ export function IdentityPage() {
 function Snippets({ token }: { token: string }) {
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const t = token || "$BUILDBOUNCER_TOKEN";
-  const gh = `- name: BuildBouncer gate\n  run: |\n    RES=$(curl -fsS -X POST ${origin}/api/v1/scans \\\n      -H "Authorization: Bearer ${t}" -H "Content-Type: application/json" \\\n      -d '{"project":"<project-id>","commit":"'"$GITHUB_SHA"'","wait":true}')\n    echo "$RES"\n    echo "$RES" | grep -q '"verdict":"blocked"' && exit 1 || exit 0`;
-  const gl = `buildbouncer:\n  stage: test\n  script:\n    - |\n      RES=$(curl -fsS -X POST ${origin}/api/v1/scans -H "Authorization: Bearer ${t}" -H "Content-Type: application/json" -d "{\\"project\\":\\"<project-id>\\",\\"commit\\":\\"$CI_COMMIT_SHA\\",\\"wait\\":true}")\n      echo "$RES"; echo "$RES" | grep -q '"verdict":"blocked"' && exit 1 || true`;
+  const gh = `- name: BuildBouncer gate\n  run: |\n    ID=$(curl -fsS -X POST ${origin}/api/v1/scans \\\n      -H "Authorization: Bearer ${t}" -H "Content-Type: application/json" \\\n      -d '{"project":"<project-id>","commit":"'"$GITHUB_SHA"'"}' | jq -r .id)\n    RES=$(curl -fsS -H "Authorization: Bearer ${t}" "${origin}/api/v1/builds/$ID?wait=120")\n    echo "$RES"\n    echo "$RES" | jq -e '.status == "passed" or .status == "warned"' >/dev/null`;
+  const gl = `buildbouncer:\n  stage: test\n  script:\n    - ID=$(curl -fsS -X POST ${origin}/api/v1/scans -H "Authorization: Bearer ${t}" -H "Content-Type: application/json" -d "{\\"project\\":\\"<project-id>\\",\\"commit\\":\\"$CI_COMMIT_SHA\\"}" | jq -r .id)\n    - RES=$(curl -fsS -H "Authorization: Bearer ${t}" "${origin}/api/v1/builds/$ID?wait=120")\n    - echo "$RES"\n    - echo "$RES" | jq -e '.status == "passed" or .status == "warned"' >/dev/null`;
   const [k, setK] = useState<"github" | "gitlab">("github");
   return (<><Tabs<"github" | "gitlab"> value={k} onChange={setK} tabs={[["github", "GitHub Actions"], ["gitlab", "GitLab CI / Jenkins / Azure DevOps"]]} /><CopyBox text={k === "github" ? gh : gl} label="Snippet" /></>);
 }
@@ -125,7 +125,7 @@ export function IntegrationsPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="p-5">
             <h2 className="mb-1 text-sm font-semibold">Gate your pipeline</h2>
-            <p className="mb-3 text-xs text-muted">Call the scan API from CI. A blocked verdict fails the step. Find project ids on the Projects page.</p>
+            <p className="mb-3 text-xs text-muted">Call the scan API from CI. The step fails unless the build passes or warns. Find project ids on the Projects page.</p>
             <Snippets token={fresh ?? ""} />
           </Card>
           <Card className="p-5">
