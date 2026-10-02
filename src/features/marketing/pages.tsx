@@ -1,9 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { toast } from "sonner";
 import { MarketingFooter, MarketingNav } from "@/components/marketing-chrome";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SAP_COVERAGE } from "@/lib/catalog";
 import { FRAMEWORKS } from "@/lib/compliance";
 import { Badge } from "@/components/ui/badge";
@@ -31,22 +28,18 @@ export function PoliciesPage() {
     <Shell kicker="Policies" title="Opinionated defaults for SAP CAP production.">
       <div className="grid gap-3 md:grid-cols-2">
         {[
-          ["Package firewall", "Maintainer pins, 14-day age floor, typosquat distance, approved @sap/* scopes."],
-          ["Lifecycle sandbox", "Default-deny install scripts, hash pins, secret-shaped read denial, no network."],
-          ["Egress", "Default-deny. Registries, vaults, SAP endpoints only. Geo and metadata denylist."],
-          ["Vulns", "Block CVSS ≥ 9. Warn 7–8.9. SLA clocks for remaining findings."],
-          ["Secrets", "Broker injection only. Stage-scoped. Hourly rotation. Log redaction."],
+          ["Package rules", "Minimum package age, new-maintainer detection, typosquat-like names, @sap/* scope checks, deny list."],
+          ["Install scripts", "Install hooks are statically analysed for credential-file reads, shell pipes, obfuscation and network references."],
+          ["Egress", "Hosts referenced by install scripts are checked against allow and deny lists (metadata IPs, .onion, paste sites and more)."],
+          ["Vulnerabilities", "OSV advisories with computed CVSS: critical and high block in block mode; others warn."],
+          ["Secrets", "Secret-shaped values are redacted from logs and evidence (SEC-03)."],
           ["SBOM", "CycloneDX 1.5 SBOM + in-toto provenance on every build, HMAC-signed."],
         ].map(([t, b]) => (
-          <div key={t} className="rounded-md border border-line bg-elev p-6">
-            <h2 className="mb-2 font-semibold">{t}</h2>
-            <p className="text-sm text-muted">{b}</p>
-          </div>
+          <div key={t} className="rounded-md border border-line bg-elev p-6"><h2 className="mb-2 font-semibold">{t}</h2><p className="text-sm text-muted">{b}</p></div>
         ))}
       </div>
-      <Link to="/dashboard/policy" className="mt-8 inline-block">
-        <Button>Open the policy builder</Button>
-      </Link>
+      <p className="mt-6 text-xs text-dim">Rules that need a runtime agent (isolation and runtime secret brokering) are listed in the policy builder and marked roadmap.</p>
+      <Link to="/login" className="mt-6 inline-block"><Button>Open the policy builder</Button></Link>
     </Shell>
   );
 }
@@ -97,93 +90,48 @@ export function ComplianceMarketingPage() {
 
 export function DocsPage() {
   return (
-    <Shell kicker="Docs" title="Install a worker. Attach a CAP repo. Enforce policy.">
+    <Shell kicker="Docs" title="Register a project. Gate your pipeline. Export evidence.">
       <ol className="grid gap-3">
         {[
-          ["1. Install a private worker", "Use the built-in scanner out of the box, or register private workers that report heartbeat from your own infrastructure."],
-          ["2. Register SAP projects", "Point at your CAP, BTP extension or Fiori repository (or paste a package.json) and choose an enforcement mode."],
-          ["3. Wire CI", "Call the scan API from GitHub Actions, GitLab, Jenkins or Azure Pipelines with an API token. A blocked verdict fails the step."],
-          ["4. Review quarantine", "New packages and maintainer changes wait for a signed decision before they ever execute."],
-          ["5. Export evidence", "CycloneDX SBOM, in-toto provenance and signed evidence bundles per build, plus compliance mapping reports."],
+          ["1. Create a workspace", "Sign up; the first user becomes administrator. Add teammates under Identity."],
+          ["2. Register a project", "Point at a GitHub repo (add a token under Integrations for private repos) or paste package.json / package-lock.json."],
+          ["3. Run a build", "Run a protected build from the dashboard and review the timeline, findings and components."],
+          ["4. Gate CI", "Create an API token, then POST /api/v1/scans from GitHub Actions, GitLab, Jenkins or Azure Pipelines. A blocked verdict fails the step."],
+          ["5. Review quarantine", "Approve, reject or permanently block held packages; decisions are audit-logged."],
+          ["6. Export evidence", "Download the signed SBOM, provenance and an evidence bundle per build, and compliance reports per framework."],
         ].map(([t, b]) => (
-          <li key={t} className="rounded-md border border-line bg-elev p-5">
-            <div className="font-semibold">{t}</div>
-            <p className="mt-1 text-sm text-muted">{b}</p>
-          </li>
+          <li key={t} className="rounded-md border border-line bg-elev p-5"><div className="font-semibold">{t}</div><p className="mt-1 text-sm text-muted">{b}</p></li>
         ))}
       </ol>
-      <div className="mt-6 flex gap-2">
-        <Link to="/dashboard/workers/install"><Button>Install wizard</Button></Link>
-        <Link to="/dashboard/projects"><Button variant="secondary">Register a project</Button></Link>
-      </div>
+      <pre className="mt-6 overflow-x-auto rounded-md border border-line bg-paper-2 p-4 font-mono text-xs leading-6">{`curl -X POST $URL/api/v1/scans \\
+  -H "Authorization: Bearer $BB_TOKEN" -H "Content-Type: application/json" \\
+  -d '{"project":"<project-id>","commit":"$GIT_SHA","wait":true}'`}</pre>
     </Shell>
   );
 }
 
 export function CustomersPage() {
   return (
-    <Shell kicker="Customers" title="Built with SAP security teams, not generic AppSec.">
+    <Shell kicker="Who it is for" title="Built for SAP security and platform teams.">
       <div className="grid gap-3 md:grid-cols-3">
         {[
-          ["Global bank", "CAP extensions on BTP, 14 private workers, Strict Prod policy."],
-          ["Industrial manufacturer", "Fiori launchpads + HANA APIs, on-prem Kubernetes in two DCs."],
-          ["Pharma", "Air-gapped workers, customer-held KMS, DORA evidence packets."],
+          ["Platform engineering", "Gate every CAP / BTP / Fiori pipeline with a single API call."],
+          ["Application security", "Review quarantined packages and own the policy and allow/deny lists."],
+          ["Audit & compliance", "Pull signed SBOMs, evidence bundles and control-mapping reports on demand."],
         ].map(([t, b]) => (
-          <div key={t} className="rounded-md border border-line bg-elev p-6">
-            <div className="mb-2 font-semibold">{t}</div>
-            <p className="text-sm text-muted">{b}</p>
-          </div>
+          <div key={t} className="rounded-md border border-line bg-elev p-6"><div className="mb-2 font-semibold">{t}</div><p className="text-sm text-muted">{b}</p></div>
         ))}
       </div>
+      <Link to="/signup" className="mt-8 inline-block"><Button>Create your workspace</Button></Link>
     </Shell>
   );
 }
 
 export function DemoPage() {
-  const [sent, setSent] = useState(false);
-  const [company, setCompany] = useState("");
-  const [landscape, setLandscape] = useState("SAP CAP on BTP");
   return (
-    <Shell kicker="Book a review" title="Bring a CAP repo. We'll block a bad package live.">
-      {sent ? (
-        <div className="max-w-lg rounded-md border border-success/30 bg-success/8 p-6">
-          <h2 className="mb-2 font-semibold">Request recorded</h2>
-          <p className="text-sm text-muted">We'll schedule a 30-minute review against your SAP landscape. Meanwhile, tour the live NorthBank tenant or register your own project in the dashboard.</p>
-          <div className="mt-4 flex gap-2">
-            <Link to="/dashboard"><Button>Open dashboard</Button></Link>
-            <Link to="/dashboard/projects"><Button variant="secondary">Register a project</Button></Link>
-          </div>
-        </div>
-      ) : (
-        <form
-          className="max-w-lg space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!company.trim()) return;
-            setSent(true);
-            toast.success("Review requested for " + company);
-          }}
-        >
-          <label className="block text-sm font-semibold">
-            Company
-            <Input className="mt-1.5" value={company} onChange={(e) => setCompany(e.target.value)} required placeholder="NorthBank Industries" />
-          </label>
-          <label className="block text-sm font-semibold">
-            SAP landscape
-            <select
-              value={landscape}
-              onChange={(e) => setLandscape(e.target.value)}
-              className="mt-1.5 h-10 w-full rounded-sm border border-line bg-elev px-3 text-sm"
-            >
-              {["SAP CAP on BTP", "Fiori / UI5", "CAP Java / Maven", "HANA Cloud apps", "Mixed BTP + on-prem"].map((o) => (
-                <option key={o}>{o}</option>
-              ))}
-            </select>
-          </label>
-          <p className="text-xs text-dim">We only store company and landscape for the live demo — no personal contact details in this tenant.</p>
-          <Button type="submit">Request 30-min review</Button>
-        </form>
-      )}
+    <Shell kicker="Get started" title="Create a workspace and scan a real project.">
+      <p className="mb-6 max-w-lg text-sm text-muted">Sign up, paste a package.json or point at a repository, and run your first protected build.</p>
+      <div className="flex gap-2"><Link to="/signup"><Button>Create your workspace</Button></Link><Link to="/login"><Button variant="secondary">Sign in</Button></Link></div>
     </Shell>
   );
 }

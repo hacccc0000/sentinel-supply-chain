@@ -12,7 +12,6 @@ const links = [
   { to: "/sap-coverage", label: "SAP coverage" },
   { to: "/compliance", label: "Compliance" },
   { to: "/docs", label: "Docs" },
-  { to: "/customers", label: "Customers" },
 ];
 
 export function MarketingNav() {
@@ -30,15 +29,15 @@ export function MarketingNav() {
         </div>
         <div className="hidden items-center gap-2 lg:flex">
           <ThemeToggle />
-          <Link to="/dashboard">
+          <Link to="/login">
             <Button variant="secondary" size="sm">
               Sign in
             </Button>
           </Link>
-          <Link to="/demo">
+          <Link to="/signup">
             <Button size="sm">
               <Calendar className="size-3.5" />
-              Book demo
+              Get started
             </Button>
           </Link>
         </div>
@@ -61,13 +60,13 @@ export function MarketingNav() {
             ))}
             <div className="mt-2 flex flex-wrap gap-2">
               <ThemeToggle />
-              <Link to="/dashboard" onClick={() => setOpen(false)}>
+              <Link to="/login" onClick={() => setOpen(false)}>
                 <Button variant="secondary" size="sm">
                   Sign in
                 </Button>
               </Link>
-              <Link to="/demo" onClick={() => setOpen(false)}>
-                <Button size="sm">Book demo</Button>
+              <Link to="/signup" onClick={() => setOpen(false)}>
+                <Button size="sm">Get started</Button>
               </Link>
             </div>
           </div>
@@ -83,8 +82,8 @@ export function MarketingFooter() {
       <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-4 px-5 text-xs text-dim lg:px-9">
         <LogoLink size="sm" />
         <span>© 2026 BuildBouncer</span>
-        <span>Private workers. Zero source egress.</span>
-        <span className={cn("ml-auto")}>SOC 2 evidence-ready · Azure · AWS · GCP · on-prem</span>
+        <span>Static supply-chain analysis for SAP npm builds.</span>
+        <span className={cn("ml-auto")}>Evidence supports your audits; it is not a certification.</span>
       </div>
     </footer>
   );
