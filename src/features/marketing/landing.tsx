@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
+import { MarketingFooter, MarketingNav } from "@/components/marketing-chrome";
 import { Check, FileSignature, KeyRound, LogIn, PackageX, Play, ScrollText, ShieldCheck, Workflow } from "lucide-react";
 import { useEffect, useState } from "react";
-import { MarketingFooter, MarketingNav } from "@/components/marketing-chrome";
 import { Button } from "@/components/ui/button";
+import { BeforeAfter, CardGrid, CtaBand, Faq, GENERAL_FAQ, Section, StatsStrip } from "@/features/marketing/sections";
+import { FRAMEWORKS } from "@/lib/compliance";
 import { HERO_CONSOLE } from "@/lib/catalog";
 
 const tone = (c: string) => (c === "ok" ? "text-success" : c === "warn" ? "text-warn" : c === "block" ? "text-danger" : c === "ink" ? "text-ink" : "text-dim");
@@ -55,6 +57,8 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+      <StatsStrip stats={[["22", "enforced policy rules"], ["6", "checks per build"], [String(FRAMEWORKS.length), "compliance frameworks mapped"], ["4", "roles with audit trail"]]} />
+
 
       <section className="border-b border-line py-20">
         <div className="mx-auto max-w-[1200px] px-5 lg:px-9">
@@ -92,12 +96,31 @@ export function LandingPage() {
         </div>
       </section>
 
+      <Section eyebrow="Why a gate" title="What changes when a decision point sits in front of npm." tint>
+        <BeforeAfter rows={[
+          ["Unknown packages", "Anything that resolves gets installed.", "New versions, new maintainers and typosquat-like names are held for review."],
+          ["Install scripts", "Hooks run with the build user's environment.", "Scripts are statically inspected for credential reads, egress and obfuscation before the build."],
+          ["Known CVEs", "Found weeks later, if at all.", "OSV advisories with CVSS evaluated on every build against your enforcement mode."],
+          ["Audit questions", "Screenshots and tribal knowledge.", "Signed SBOM, provenance and an attributed decision log per build."],
+          ["Pipeline control", "Scanners that only report.", "A verdict your CI step can fail on."],
+        ]} />
+      </Section>
+
+      <Section eyebrow="Who it is for" title="One tool, three teams.">
+        <CardGrid items={[
+          { tag: "Platform engineering", t: "Gate every pipeline with one call", b: "Add a single CI step for CAP, UI5 or Fiori builds. Assign heavy projects to a private worker inside your network." },
+          { tag: "Application security", t: "Own the policy and the queue", b: "Tune enforcement per project, maintain allow and deny lists, and work the quarantine queue with notes and bulk actions." },
+          { tag: "Audit and compliance", t: "Pull evidence on demand", b: "Download signed SBOMs, provenance and evidence bundles, plus control-mapped reports for each framework." },
+        ]} />
+      </Section>
+
+
       <section className="border-b border-line py-20">
         <div className="mx-auto max-w-[1200px] px-5 lg:px-9">
           <h2 className="mb-10 text-4xl font-light tracking-tight">What is in the product today</h2>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {[
-              { ic: ShieldCheck, t: "Policy engine", b: "29 rules across packages, lifecycle scripts, vulnerabilities, egress and SBOM. Version history and publish.", to: "/policies" },
+              { ic: ShieldCheck, t: "Policy engine", b: "22 enforced rules across packages, lifecycle scripts, vulnerabilities, egress and SBOM. Version history and publish.", to: "/policies" },
               { ic: PackageX, t: "Quarantine workflow", b: "Approve, reject or permanently block — with notes, bulk actions and an audit trail.", to: "/dashboard/quarantine" },
               { ic: FileSignature, t: "Signed SBOM & provenance", b: "CycloneDX 1.5 and in-toto statements, HMAC-SHA256 signed and verifiable in the app.", to: "/dashboard/sbom" },
               { ic: Workflow, t: "Private workers", b: "Run the worker image in your own network; it scans locally and uploads only the result.", to: "/docs" },
@@ -111,6 +134,10 @@ export function LandingPage() {
           <p className="mt-8 max-w-3xl text-sm text-dim">On the roadmap: a runtime sandbox agent that observes install scripts as they execute, Helm packaging for workers, SLSA L3 attestation, Java/Maven support, and BTP / Jira / Vault integrations.</p>
         </div>
       </section>
+
+      <Section eyebrow="Questions" title="Straight answers before you ask." tint>
+        <Faq items={GENERAL_FAQ} />
+      </Section>
 
       <section className="bg-elev py-20 text-center">
         <h2 className="text-4xl font-light tracking-tight">Scan your first SAP project in minutes.</h2>

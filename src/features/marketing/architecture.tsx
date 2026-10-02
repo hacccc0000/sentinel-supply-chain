@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { CardGrid, Faq, GENERAL_FAQ, Section } from "@/features/marketing/sections";
 import { MarketingFooter, MarketingNav } from "@/components/marketing-chrome";
 import { Button } from "@/components/ui/button";
 
@@ -41,6 +42,19 @@ export function ArchitecturePage() {
           </div>
         </div>
       </section>
+      <Section eyebrow="Components" title="What runs where.">
+        <CardGrid cols={3} items={[
+          { tag: "Control plane", t: "TanStack Start on Node", b: "One container serves the dashboard, the REST API and the built-in scanner. Stateless; scale by adding instances." },
+          { tag: "Data", t: "Azure PostgreSQL", b: "Projects, builds, findings, policies, users and the audit log. Migrations apply automatically on container start under an advisory lock." },
+          { tag: "Workers", t: "Built-in or private", b: "Scan in the control plane, or run the worker image in your own network. Workers claim jobs, scan locally and upload only the result." },
+          { tag: "Signing", t: "HMAC or Key Vault", b: "SBOM and provenance are signed with the platform key, or an RS256 key in Azure Key Vault reached via managed identity." },
+          { tag: "Identity", t: "Local login and Entra SSO", b: "scrypt-hashed passwords and HTTP-only sessions, with optional OpenID Connect (PKCE) sign-in through Microsoft Entra." },
+          { tag: "Delivery", t: "GitHub to GHCR to App Service", b: "A GitHub Actions pipeline builds the image, pushes to GHCR and redeploys the Azure web app." },
+        ]} />
+      </Section>
+      <Section eyebrow="Questions" title="Architecture and data handling." tint>
+        <Faq items={GENERAL_FAQ.slice(0, 3)} />
+      </Section>
       <section className="py-14">
         <div className="mx-auto max-w-[1100px] px-5 lg:px-9">
           <h2 className="mb-3 text-2xl font-light">Not built yet</h2>

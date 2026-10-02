@@ -12,6 +12,7 @@ const links = [
   { to: "/sap-coverage", label: "SAP coverage" },
   { to: "/compliance", label: "Compliance" },
   { to: "/docs", label: "Docs" },
+  { to: "/demo", label: "Contact" },
 ];
 
 export function MarketingNav() {
@@ -76,14 +77,38 @@ export function MarketingNav() {
   );
 }
 
+const footCols: { title: string; items: { to: string; label: string }[] }[] = [
+  { title: "Product", items: [{ to: "/architecture", label: "Architecture" }, { to: "/policies", label: "Policies" }, { to: "/sap-coverage", label: "SAP coverage" }, { to: "/compliance", label: "Compliance" }] },
+  { title: "Resources", items: [{ to: "/docs", label: "Documentation" }, { to: "/login", label: "Sign in" }, { to: "/signup", label: "Create account" }] },
+  { title: "Company", items: [{ to: "/demo", label: "Contact us" }, { to: "/demo", label: "Book a review" }] },
+];
+
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-line bg-elev py-10">
-      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-4 px-5 text-xs text-dim lg:px-9">
-        <LogoLink size="sm" />
-        <span>© 2026 BuildBouncer</span>
-        <span>Static supply-chain analysis for SAP npm builds.</span>
-        <span className={cn("ml-auto")}>Evidence supports your audits; it is not a certification.</span>
+    <footer className="border-t border-line bg-elev">
+      <div className="h-[3px] w-full bg-gradient-to-r from-brand-red via-brand-red/40 to-transparent" aria-hidden />
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr] lg:px-9">
+        <div>
+          <LogoLink />
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted">Static supply-chain analysis for SAP npm builds. Scan before you build, quarantine what looks wrong, and keep signed evidence for every release.</p>
+        </div>
+        {footCols.map((c) => (
+          <div key={c.title}>
+            <h3 className="mb-4 text-2xs font-bold tracking-[0.16em] text-ink uppercase">{c.title}</h3>
+            <ul className="space-y-2.5 text-sm">
+              {c.items.map((l) => (
+                <li key={l.label}><Link to={l.to} className="text-muted transition hover:text-ink">{l.label}</Link></li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-line">
+        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-x-6 gap-y-2 px-5 py-5 text-xs text-dim lg:px-9">
+          <span>© 2026 BuildBouncer</span>
+          <span className="inline-flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-success" aria-hidden />Hosted on Microsoft Azure</span>
+          <span className={cn("lg:ml-auto")}>Evidence supports your audits; it is not a certification.</span>
+        </div>
       </div>
     </footer>
   );
